@@ -258,10 +258,15 @@ public:
 
       double temp_v = hSource->GetBinContent(ib);
 
-      if (temp_v > 0.0) {
+      if ((temp_v > 0.0) || (temp_v < 0.0)) {
+
 	double temp_x = hSource->GetBinCenter(ib);
+
+	//	if (temp_v < 0.0) std::cout << " temp_v < 0.0  -->  " << temp_v << "  -  " << temp_x << std::endl;
+
 	hTarget->Fill(temp_x, temp_v);
       }
+
     }
 
     return;
@@ -354,17 +359,43 @@ public:
 
 
 //void UpsampledHisto() {
-int main() {
+// int main() {
+int main(int argc, char *argv[]) {
 
-  ROOT::EnableImplicitMT(4);
+  std::cout << " argc  =  " << argc << std::endl;
 
-  ROOT::RDataFrame rdf{"Events", "test_oversampling.root"};
+  if (argc != 3) {
+    std::cout << std::endl << "Wrong argument count!" << std::endl << std::endl;
+    return 0;
+  }
+
+  int nThreads = std::stoi(argv[1]);
+  int nSteps   = std::stoi(argv[2]);
+
+  std::cout << " nThreads  =  " << nThreads << std::endl;
+  std::cout << " nSteps    =  " << nSteps   << std::endl;
+
+  if (nThreads > 1) {
+
+    ROOT::EnableImplicitMT(nThreads);
+  }
+
+  int iStep = nSteps;
+
+
+  // ROOT::EnableImplicitMT(4);
+
+  // ROOT::RDataFrame rdf{"Events", "test_oversampling.root"};
+  // int nFold = 4;
+
+  ROOT::RDataFrame rdf{"Events", "test_oversampling_4M.root"};
+  int nFold = 5;
+
+  // int iStep = 0;
 
   auto dd = rdf.Filter("nJet > 0").Define("FirstJet_pt", "Jet_pt[0]");  // Adding the Filter step avoids the value for Jet_pt[0] = 0 when there is no jet :)
 
 
-  int nFold = 4;
-  int iStep = 10;
 
   std::string evIDVar( "genEventProgressiveNumber");
   std::string evValVar("FirstJet_pt");
